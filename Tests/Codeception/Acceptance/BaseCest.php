@@ -46,7 +46,7 @@ abstract class BaseCest
 
     public function _after(AcceptanceTester $I): void
     {
-        $this->ensureShopUserData($I);
+        /*$this->ensureShopUserData($I);
         $this->enableExpressButtons($I);
         $I->updateConfigInDatabase('blShowNetPrice', false, 'bool');
         $I->updateModuleConfiguration('oscPayPalLoginWithPayPalEMail', false);
@@ -55,7 +55,7 @@ abstract class BaseCest
         $I->deleteFromDatabase('oxuserbaskets', ['OXTITLE >=' => 'savedbasket']);
         $I->deleteFromDatabase('oscpaypal_order', ['OXSHOPID >' => '0']);
         $I->resetCookie('sid');
-        $I->resetCookie('sid_key');
+        $I->resetCookie('sid_key');*/
     }
 
     protected function getShopUrl(): string

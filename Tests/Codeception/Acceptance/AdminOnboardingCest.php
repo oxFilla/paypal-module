@@ -10,10 +10,13 @@ declare(strict_types=1);
 namespace OxidSolutionCatalysts\PayPal\Tests\Codeception\Acceptance;
 
 use OxidEsales\Codeception\Module\Translation\Translator;
+use OxidEsales\EshopCommunity\Core\Registry;
+use OxidEsales\EshopCommunity\Internal\Transition\Utility\Context;
 use OxidSolutionCatalysts\PayPal\Tests\Codeception\AcceptanceTester;
 use OxidSolutionCatalysts\PayPal\Tests\Codeception\Page\PayPalAdmin;
 use OxidSolutionCatalysts\PayPal\Traits\ServiceContainer;
 use OxidSolutionCatalysts\PayPal\Tests\Codeception\Page\PayPalLogin;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * All tests related to PayPal admin section go here.
@@ -31,12 +34,36 @@ final class AdminOnboardingCest extends BaseCest
     {
         parent::_before($I);
 
+        $path = Registry::get(Context::class)
+                ->getProjectConfigurationDirectory() . 'environment/' . Registry::getConfig()->getShopId() . '.yaml';
+        $fileSystem = Registry::get(Filesystem::class);
+
+        if ($fileSystem->exists($path)) {
+            $fileSystem->rename($path, $path . '.bak', true);
+        }
+
         $I->updateModuleConfiguration('oscPayPalSandboxClientId', '');
         $I->updateModuleConfiguration('oscPayPalSandboxMode', false);
         $I->updateModuleConfiguration('oscPayPalSandboxClientSecret', '');
         $I->updateModuleConfiguration('oscPayPalSandboxWebhookId', '');
 
+        $I->updateModuleConfiguration('oscPayPalClientId', '');
+        $I->updateModuleConfiguration('oscPayPalClientSecret', '');
+
         $I->clearShopCache();
+    }
+
+    public function _after(AcceptanceTester $I): void
+    {
+        $path = Registry::get(Context::class)
+                ->getProjectConfigurationDirectory() . 'environment/' . Registry::getConfig()->getShopId() . '.yaml.bak';
+        $fileSystem = Registry::get(Filesystem::class);
+
+        if ($fileSystem->exists($path)) {
+            $fileSystem->rename($path, substr($path, 0, -4), true);
+        }
+
+        parent::_after($I);
     }
 
     public function testOnboardingLinkIsShown(AcceptanceTester $I): void

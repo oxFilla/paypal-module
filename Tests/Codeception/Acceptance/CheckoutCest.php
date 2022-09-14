@@ -9,10 +9,14 @@ declare(strict_types=1);
 
 namespace OxidSolutionCatalysts\PayPal\Tests\Codeception\Acceptance;
 
+use OxidEsales\Codeception\Page\Checkout\OrderCheckout;
+use OxidEsales\Codeception\Page\Checkout\PaymentCheckout;
+use OxidEsales\Codeception\Page\Checkout\ThankYou;
 use OxidSolutionCatalysts\PayPal\Tests\Codeception\AcceptanceTester;
 use Codeception\Util\Fixtures;
 use OxidEsales\Codeception\Step\Basket;
 use OxidEsales\Codeception\Module\Translation\Translator;
+use OxidSolutionCatalysts\PayPal\Tests\Codeception\Page\PayPalLogin;
 
 /**
  * @group osc_paypal
@@ -31,24 +35,23 @@ final class CheckoutCest extends BaseCest
 
         $this->setUserDataSameAsPayPal($I);
         $this->proceedToPaymentStep($I, $_ENV['sBuyerLogin']);
-        $token = $this->approvePayPalTransaction($I);
-        $I->amOnUrl($this->getShopUrl() . '?cl=oscpaypalproxy&fnc=approveOrder&orderID=' . $token);
+        $paymentCheckout = new PaymentCheckout($I);
+        /** @var OrderCheckout $orderCheckout */
+        $paymentCheckout->selectPayment('oscpaypal');
+        $orderCheckout = $paymentCheckout->goToNextStep();
+        $orderCheckout->submitOrder();
 
-        //pretend we are back in shop after clicking PayPal button and approving order
-        $I->amOnUrl($this->getShopUrl() . '?cl=payment');
-        $I->see(Translator::translate('OSC_PAYPAL_PAY_PROCESSED'));
+        $payPalLoginPage = new PayPalLogin($I);
+        $payPalLoginPage->loginToPayPal($_ENV['sBuyerLogin'], $_ENV['sBuyerPassword']);
+        $payPalLoginPage->confirmPayPal();
 
-        $orderNumber = $this->finalizeOrder($I);
+        $thankYouPage = new ThankYou($I);
+        $orderNumber = $thankYouPage->grabOrderNumber();
+
         $I->assertGreaterThan(1, $orderNumber);
 
         $orderId = $I->grabFromDatabase('oxorder', 'oxid', ['OXORDERNR' => $orderNumber]);
-        $I->seeInDataBase(
-            'oscpaypal_order',
-            [
-                'OXORDERID' => $orderId,
-                'OXPAYPALORDERID' => $token
-            ]
-        );
+        $I->assertNotNull($I->grabFromDatabase('oscpaypal_order', 'OXPAYPALORDERID', ['OXORDERID' => $orderId]));
 
         $I->seeInDataBase(
             'oxorder',
@@ -79,24 +82,24 @@ final class CheckoutCest extends BaseCest
         );
 
         $this->proceedToPaymentStep($I);
-        $token = $this->approvePayPalTransaction($I);
-        $I->amOnUrl($this->getShopUrl() . '?cl=oscpaypalproxy&fnc=approveOrder&orderID=' . $token);
+        $paymentCheckout = new PaymentCheckout($I);
+        /** @var OrderCheckout $orderCheckout */
+        $paymentCheckout->selectPayment('oscpaypal');
+        $orderCheckout = $paymentCheckout->goToNextStep();
+        $orderCheckout->submitOrder();
 
-        //pretend we are back in shop after clicking PayPal button and approving order
-        $I->amOnUrl($this->getShopUrl() . '?cl=payment');
-        $I->see(Translator::translate('OSC_PAYPAL_PAY_PROCESSED'));
+        $payPalLoginPage = new PayPalLogin($I);
+        $payPalLoginPage->loginToPayPal($_ENV['sBuyerLogin'], $_ENV['sBuyerPassword']);
+        $payPalLoginPage->confirmPayPal();
 
-        $orderNumber = $this->finalizeOrder($I);
+        $thankYouPage = new ThankYou($I);
+        $orderNumber = $thankYouPage->grabOrderNumber();
+
         $I->assertGreaterThan(1, $orderNumber);
 
         $orderId = $I->grabFromDatabase('oxorder', 'oxid', ['OXORDERNR' => $orderNumber]);
-        $I->seeInDataBase(
-            'oscpaypal_order',
-            [
-                'OXORDERID' => $orderId,
-                'OXPAYPALORDERID' => $token
-            ]
-        );
+        $I->assertNotNull($I->grabFromDatabase('oscpaypal_order', 'OXPAYPALORDERID', ['OXORDERID' => $orderId]));
+
         $I->seeInDataBase(
             'oxorder',
             [

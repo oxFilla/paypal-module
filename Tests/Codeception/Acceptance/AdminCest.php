@@ -53,6 +53,7 @@ final class AdminCest extends BaseCest
 
         $I->retryClick('#heading5');
         $I->waitForElement("//select[@id='sca-config']");
+        $I->wait(1);
         $I->see(Translator::translate('OSC_PAYPAL_SCA_CONTINGENCY_LABEL'));
     }
 
