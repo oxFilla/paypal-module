@@ -31,12 +31,11 @@ abstract class BaseCest
 
     public function _before(AcceptanceTester $I): void
     {
-        $this->activateModules();
-
         $I->clearShopCache();
         $I->setPayPalBannersVisibility(false);
         $I->updateConfigInDatabase('blUseStock', false, 'bool');
         $I->updateConfigInDatabase('bl_perfLoadPrice', true, 'bool');
+        $I->updateConfigInDatabase('blShowNetPrice', false, 'bool');
         $I->updateConfigInDatabase('iNewBasketItemMessage', false, 'bool');
         $I->updateModuleConfiguration('oscPayPalLoginWithPayPalEMail', false);
 
@@ -58,11 +57,6 @@ abstract class BaseCest
 
     public function _after(AcceptanceTester $I): void
     {
-        $this->ensureShopUserData($I);
-        $this->enableExpressButtons($I);
-        $I->updateConfigInDatabase('blShowNetPrice', false, 'bool');
-        $I->updateModuleConfiguration('oscPayPalLoginWithPayPalEMail', false);
-
         $I->deleteFromDatabase('oxaddress', ['OXFNAME' => $_ENV['sBuyerFirstName']]);
         $I->deleteFromDatabase('oxorder', ['OXORDERNR >=' => '2']);
         $I->deleteFromDatabase('oxorder', ['OXORDERNR <' => '1']);
